@@ -160,8 +160,8 @@ func UpdateFormHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse form with max memory limit for file uploads
-	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	// Parse form
+	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
@@ -209,6 +209,19 @@ func UpdateFormHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Failed to update form: "+result.Error.Error(), http.StatusInternalServerError)
 			return
 		}
+
+	case "add_step":
+		// For add_step, we just need to update the form to be multi-step
+		form.IsMultiStep = true
+		result = database.DB.Save(&form)
+		if result.Error != nil {
+			http.Error(w, "Failed to add step: "+result.Error.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Redirect back to the form editor
+		http.Redirect(w, r, "/forms/edit/"+formIDStr, http.StatusSeeOther)
+		return
 
 	case "add_field":
 		stepStr := r.FormValue("step")

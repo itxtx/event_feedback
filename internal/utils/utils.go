@@ -55,7 +55,10 @@ func TemplateFuncs() template.FuncMap {
 			if options == "" {
 				return []string{}
 			}
-			return strings.Split(options, "\n")
+			// Remove the JSON array brackets and quotes
+			options = strings.Trim(options, "[]")
+			options = strings.ReplaceAll(options, "\"", "")
+			return strings.Split(options, ",")
 		},
 
 		// Splits a comma-separated string of values into a slice

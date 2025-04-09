@@ -422,37 +422,42 @@
   
   /* Modals */
   .modal {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
     z-index: 1000;
   }
   
+  .modal.hidden {
+    display: none;
+  }
+  
   .modal-content {
+    position: relative;
     background-color: white;
+    margin: 10% auto;
+    padding: 2rem;
+    width: 90%;
+    max-width: 600px;
     border-radius: 8px;
     box-shadow: var(--shadow);
-    padding: 2rem;
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
   }
   
   .close-modal {
-    float: right;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
     font-size: 1.5rem;
     cursor: pointer;
+    color: var(--gray);
   }
   
-  .hidden {
-    display: none;
+  .close-modal:hover {
+    color: var(--gray-dark);
   }
   
   /* View form page */
@@ -568,4 +573,64 @@
   /* Utility classes */
   .inline-form {
     display: inline;
+  }
+  
+  /* Form editor specific styles */
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--gray-light);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  
+  .add-field-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+  }
+  
+  .add-field-button:hover {
+    background-color: var(--primary-color-dark);
+  }
+  
+  .options-group {
+    display: none;
+  }
+  
+  .options-group.hidden {
+    display: none;
+  }
+  
+  .options-group:not(.hidden) {
+    display: block;
+  }
+  
+  /* Step fields container */
+  .step-fields {
+    display: none;
+  }
+  
+  .step-fields[data-step="1"] {
+    display: block;
+  }
+  
+  /* Form field types */
+  .field-type {
+    text-transform: capitalize;
+  }
+  
+  /* Required badge */
+  .required-badge {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
   }
