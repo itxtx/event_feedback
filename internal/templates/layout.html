@@ -1,3 +1,4 @@
+{{define "layout"}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +36,7 @@
         </div>
         {{end}}
         
-        {{block "content" .}}{{end}}
+        {{template "content" .}}
     </main>
 
     <footer>
@@ -47,3 +48,4 @@
     <script src="/static/js/scripts.js"></script>
 </body>
 </html>
+{{end}}

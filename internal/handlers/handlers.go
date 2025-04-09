@@ -71,9 +71,14 @@ func parseTemplates() {
 			continue
 		}
 
-		fileName := filepath.Base(templateFile)
-		tmpl := template.New(fileName).Funcs(funcMap)
+		// Create a new template with functions
+		tmpl := template.New("").Funcs(funcMap)
+
+		// Parse both layout and content templates
 		tmpl = template.Must(tmpl.ParseFiles(layoutFile, templateFile))
+
+		// Store with the content template name
+		fileName := filepath.Base(templateFile)
 		Templates[fileName] = tmpl
 	}
 }
@@ -82,12 +87,17 @@ func parseTemplates() {
 func RenderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	template, ok := Templates[tmpl]
 	if !ok {
-		http.Error(w, "Template not found", http.StatusInternalServerError)
+		http.Error(w, "Template not found: "+tmpl, http.StatusInternalServerError)
 		return
 	}
 
-	err := template.Execute(w, data)
+	// Set content type
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	// Execute template
+	err := template.ExecuteTemplate(w, "layout", data)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
