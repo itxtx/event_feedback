@@ -52,7 +52,6 @@
         
         {{if .Form.IsMultiStep}}
             <div class="tabs">
-                {{$formID := .Form.ID}}
                 {{$steps := 0}}
                 {{range .Fields}}
                     {{if gt .Step $steps}}
@@ -85,7 +84,7 @@
                                             <div class="field-actions">
                                                 <button class="edit-field" data-field-id="{{.ID}}">Edit</button>
                                                 <form action="/forms/update" method="post" class="inline-form">
-                                                    <input type="hidden" name="form_id" value="{{$formID}}">
+                                                    <input type="hidden" name="form_id" value="{{$.Form.ID}}">
                                                     <input type="hidden" name="field_id" value="{{.ID}}">
                                                     <input type="hidden" name="action" value="delete_field">
                                                     <button type="submit" class="delete-field">Delete</button>
@@ -114,7 +113,7 @@
                                     <div class="field-actions">
                                         <button class="edit-field" data-field-id="{{.ID}}">Edit</button>
                                         <form action="/forms/update" method="post" class="inline-form">
-                                            <input type="hidden" name="form_id" value="{{.Form.ID}}">
+                                            <input type="hidden" name="form_id" value="{{$.Form.ID}}">
                                             <input type="hidden" name="field_id" value="{{.ID}}">
                                             <input type="hidden" name="action" value="delete_field">
                                             <button type="submit" class="delete-field">Delete</button>
@@ -200,173 +199,61 @@
     // Show/hide options field based on field type
     document.getElementById('field_type').addEventListener('change', function() {
         const optionsGroup = document.querySelector('.options-group');
-        const fieldType = this.value;
-        
-        if (fieldType === 'select' || fieldType === 'radio' || fieldType === 'checkbox') {
+        const fieldTypes = ['select', 'radio', 'checkbox'];
+        if (fieldTypes.includes(this.value)) {
             optionsGroup.classList.remove('hidden');
         } else {
             optionsGroup.classList.add('hidden');
         }
     });
-    
-    // Tab navigation for multi-step forms
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const step = this.getAttribute('data-step');
-            
-            // Handle new step
-            if (step === 'new') {
-                const lastStep = document.querySelectorAll('.step-fields').length;
-                const newStep = lastStep + 1;
-                
-                // Create a new step UI
-                const stepContainer = document.createElement('div');
-                stepContainer.className = 'step-fields';
-                stepContainer.setAttribute('data-step', newStep);
-                stepContainer.innerHTML = `
-                    <h4>Step ${newStep} Fields</h4>
-                    <div class="fields-list"></div>
-                    <div class="add-field-container">
-                        <button class="add-field-button" data-step="${newStep}">+ Add Field to Step ${newStep}</button>
-                    </div>
-                `;
-                
-                document.querySelector('.fields-container').appendChild(stepContainer);
-                
-                // Create a new tab button
-                const tabsContainer = document.querySelector('.tabs');
-                const newButton = document.createElement('button');
-                newButton.className = 'tab-button';
-                newButton.setAttribute('data-step', newStep);
-                newButton.textContent = `Step ${newStep}`;
-                
-                // Insert before the "Add Step" button
-                tabsContainer.insertBefore(newButton, this);
-                
-                // Show the new step
-                document.querySelectorAll('.step-fields').forEach(el => el.classList.add('hidden'));
-                stepContainer.classList.remove('hidden');
-                
-                // Update active tab
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                newButton.classList.add('active');
-                
-                // Add event listener to new button
-                newButton.addEventListener('click', function() {
-                    const clickedStep = this.getAttribute('data-step');
-                    document.querySelectorAll('.step-fields').forEach(el => {
-                        if (el.getAttribute('data-step') === clickedStep) {
-                            el.classList.remove('hidden');
-                        } else {
-                            el.classList.add('hidden');
-                        }
-                    });
-                    
-                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                });
-                
-                // Add event listeners to new add field button
-                stepContainer.querySelector('.add-field-button').addEventListener('click', function() {
-                    openAddFieldModal(this.getAttribute('data-step'));
-                });
-                
-                return;
-            }
-            
-            // Show the selected step
-            document.querySelectorAll('.step-fields').forEach(el => {
-                if (el.getAttribute('data-step') === step) {
-                    el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
-                }
-            });
-            
-            // Update active tab
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-    
-    // Open modal for adding fields
-    function openAddFieldModal(step) {
-        const modal = document.getElementById('field-modal');
-        const form = document.getElementById('field-form');
-        const modalTitle = document.getElementById('modal-title');
-        
-        // Reset form
-        form.reset();
-        document.getElementById('field_id').value = '';
-        document.getElementById('step').value = step;
-        form.setAttribute('action', '/forms/update');
-        form.elements['action'].value = 'add_field';
-        
-        // Update modal title
+
+    // Modal handling
+    const modal = document.getElementById('field-modal');
+    const closeModal = document.querySelector('.close-modal');
+    const closeModalButton = document.querySelector('.close-modal-button');
+    const addFieldButtons = document.querySelectorAll('.add-field-button');
+    const editFieldButtons = document.querySelectorAll('.edit-field');
+    const fieldForm = document.getElementById('field-form');
+    const modalTitle = document.getElementById('modal-title');
+    const fieldIdInput = document.getElementById('field_id');
+    const stepInput = document.getElementById('step');
+
+    function openModal() {
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        fieldForm.reset();
+        fieldIdInput.value = '';
         modalTitle.textContent = 'Add Field';
-        
-        // Show options field based on field type
-        const optionsGroup = document.querySelector('.options-group');
-        const fieldType = document.getElementById('field_type').value;
-        
-        if (fieldType === 'select' || fieldType === 'radio' || fieldType === 'checkbox') {
-            optionsGroup.classList.remove('hidden');
-        } else {
-            optionsGroup.classList.add('hidden');
+    }
+
+    closeModal.addEventListener('click', closeModal);
+    closeModalButton.addEventListener('click', closeModal);
+
+    addFieldButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            stepInput.value = this.dataset.step;
+            openModal();
+        });
+    });
+
+    editFieldButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const fieldId = this.dataset.fieldId;
+            // TODO: Fetch field data and populate form
+            fieldIdInput.value = fieldId;
+            modalTitle.textContent = 'Edit Field';
+            openModal();
+        });
+    });
+
+    // Handle form submission
+    fieldForm.addEventListener('submit', function(e) {
+        if (fieldIdInput.value) {
+            this.querySelector('input[name="action"]').value = 'update_field';
         }
-        
-        // Show modal
-        modal.classList.remove('hidden');
-    }
-    
-    // Open modal for editing fields
-    function openEditFieldModal(fieldId) {
-        // This would fetch the field data via AJAX in a real application
-        // For this example, we'll use a simple approach with data attributes
-        
-        const modal = document.getElementById('field-modal');
-        const form = document.getElementById('field-form');
-        const modalTitle = document.getElementById('modal-title');
-        
-        // Reset form
-        form.reset();
-        
-        // Set form action to update
-        form.setAttribute('action', '/forms/update');
-        form.elements['action'].value = 'update_field';
-        document.getElementById('field_id').value = fieldId;
-        
-        // Update modal title
-        modalTitle.textContent = 'Edit Field';
-        
-        // TODO: In a real application, fetch field data via AJAX
-        // For now, we'll leave fields empty
-        
-        // Show modal
-        modal.classList.remove('hidden');
-    }
-    
-    // Add event listeners for add field buttons
-    document.querySelectorAll('.add-field-button').forEach(button => {
-        button.addEventListener('click', function() {
-            openAddFieldModal(this.getAttribute('data-step'));
-        });
-    });
-    
-    // Add event listeners for edit field buttons
-    document.querySelectorAll('.edit-field').forEach(button => {
-        button.addEventListener('click', function() {
-            openEditFieldModal(this.getAttribute('data-field-id'));
-        });
-    });
-    
-    // Close modal
-    document.querySelector('.close-modal').addEventListener('click', function() {
-        document.getElementById('field-modal').classList.add('hidden');
-    });
-    
-    document.querySelector('.close-modal-button').addEventListener('click', function() {
-        document.getElementById('field-modal').classList.add('hidden');
     });
 </script>
 {{end}}

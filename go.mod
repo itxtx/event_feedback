@@ -4,8 +4,8 @@ go 1.20
 
 require (
 	github.com/lib/pq v1.10.9
-	gorm.io/driver/postgres v1.5.2
-	gorm.io/gorm v1.25.4
+	gorm.io/driver/postgres v1.5.4
+	gorm.io/gorm v1.25.7
 )
 
 require (

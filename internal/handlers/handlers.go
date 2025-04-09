@@ -6,19 +6,22 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/yourusername/event-feedback/internal/database"
 	"github.com/yourusername/event-feedback/internal/utils"
+	"gorm.io/gorm"
 )
 
 var (
 	// Templates holds all parsed templates
 	Templates map[string]*template.Template
 	// DB is the database connection
-	DB *sql.DB
+	DB *gorm.DB
 )
 
 // RegisterHandlers registers all HTTP handlers
 func RegisterHandlers(mux *http.ServeMux, db *sql.DB) {
-	DB = db
+	// Use the GORM DB instance directly
+	DB = database.DB
 
 	// Parse templates
 	parseTemplates()
@@ -70,7 +73,8 @@ func parseTemplates() {
 
 		fileName := filepath.Base(templateFile)
 		tmpl := template.New(fileName).Funcs(funcMap)
-		Templates[fileName] = template.Must(tmpl.ParseFiles(layoutFile, templateFile))
+		tmpl = template.Must(tmpl.ParseFiles(layoutFile, templateFile))
+		Templates[fileName] = tmpl
 	}
 }
 
@@ -82,7 +86,7 @@ func RenderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 		return
 	}
 
-	err := template.ExecuteTemplate(w, "layout", data)
+	err := template.Execute(w, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

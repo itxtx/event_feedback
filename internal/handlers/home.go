@@ -35,17 +35,17 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get published forms
+	// Get published forms with their events
 	var forms []database.Form
-	result = database.DB.Where("is_published = ?", true).Order("created_at desc").Limit(10).Find(&forms)
+	result = database.DB.
+		Where("is_published = ?", true).
+		Order("created_at desc").
+		Limit(10).
+		Preload("Event").
+		Find(&forms)
 	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		http.Error(w, "Failed to fetch forms", http.StatusInternalServerError)
 		return
-	}
-
-	// For each form, get the associated event
-	for i := range forms {
-		database.DB.First(&forms[i].Event, forms[i].EventID)
 	}
 
 	data := PageData{
