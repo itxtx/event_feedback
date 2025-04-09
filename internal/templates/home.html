@@ -1,0 +1,75 @@
+{{define "content"}}
+<div class="home-page">
+    <section class="intro">
+        <h3>Welcome to the Event Feedback System</h3>
+        <p>This system allows event organizers to create custom feedback forms and collect responses from event attendees.</p>
+    </section>
+
+    <div class="dashboard">
+        <section class="recent-events">
+            <h3>Recent Events</h3>
+            {{if .Events}}
+                <ul class="event-list">
+                    {{range .Events}}
+                        <li>
+                            <h4><a href="/events/view/{{.ID}}">{{.Name}}</a></h4>
+                            <p class="date">{{.Date.Format "January 2, 2006"}}</p>
+                            <p class="description">{{if .Description}}{{.Description}}{{else}}No description provided.{{end}}</p>
+                        </li>
+                    {{end}}
+                </ul>
+                <p class="view-all"><a href="/events">View all events &rarr;</a></p>
+            {{else}}
+                <p class="empty-state">No events have been created yet.</p>
+                <p><a href="/events/new" class="button">Create your first event</a></p>
+            {{end}}
+        </section>
+
+        <section class="available-forms">
+            <h3>Available Feedback Forms</h3>
+            {{if .Forms}}
+                <ul class="form-list">
+                    {{range .Forms}}
+                        <li>
+                            <h4><a href="/forms/view/{{.ID}}">{{.Title}}</a></h4>
+                            <p class="event-name">For: {{.Event.Name}}</p>
+                            <p class="type">{{if .IsMultiStep}}Multi-step form{{else}}Single page form{{end}}</p>
+                        </li>
+                    {{end}}
+                </ul>
+            {{else}}
+                <p class="empty-state">No published forms available.</p>
+                {{if .Events}}
+                    <p>Create a new form for an <a href="/events">existing event</a>.</p>
+                {{end}}
+            {{end}}
+        </section>
+    </div>
+    
+    <section class="how-it-works">
+        <h3>How It Works</h3>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h4>Create an Event</h4>
+                <p>Start by creating an event for which you need feedback.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h4>Design a Form</h4>
+                <p>Create a custom feedback form with various question types.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h4>Share with Attendees</h4>
+                <p>Share the form link with your event attendees.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h4>Collect Responses</h4>
+                <p>Review the feedback submitted by your attendees.</p>
+            </div>
+        </div>
+    </section>
+</div>
+{{end}}

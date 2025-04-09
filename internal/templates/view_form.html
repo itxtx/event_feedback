@@ -1,0 +1,121 @@
+{{define "content"}}
+<div class="view-form-page">
+    <div class="form-context">
+        <p>Event: <span class="event-name">{{.Event.Name}}</span></p>
+        {{if .Form.IsMultiStep}}
+            <p>Step {{.Submission.CurrentStep}} of {{totalSteps .Fields}}</p>
+        {{end}}
+    </div>
+    
+    <form action="/forms/submit/" method="post" class="submission-form">
+        <input type="hidden" name="submission_id" value="{{.Submission.ID}}">
+        <input type="hidden" name="form_id" value="{{.Form.ID}}">
+        <input type="hidden" name="current_step" value="{{.Submission.CurrentStep}}">
+        
+        <div class="fields-container">
+            {{range .Fields}}
+                <div class="form-group">
+                    <label for="field_{{.ID}}">
+                        {{.Label}}
+                        {{if .IsRequired}}<span class="required">*</span>{{end}}
+                    </label>
+                    
+                    {{if eq .FieldType "text"}}
+                        <input type="text" id="field_{{.ID}}" name="field_{{.ID}}" 
+                            {{if .Placeholder}}placeholder="{{.Placeholder}}"{{end}}
+                            {{if .IsRequired}}required{{end}}
+                            value="{{.Placeholder}}"> <!-- Using Placeholder to store preloaded value -->
+                    
+                    {{else if eq .FieldType "textarea"}}
+                        <textarea id="field_{{.ID}}" name="field_{{.ID}}" rows="4"
+                            {{if .Placeholder}}placeholder="{{.Placeholder}}"{{end}}
+                            {{if .IsRequired}}required{{end}}>{{.Placeholder}}</textarea>
+                    
+                    {{else if eq .FieldType "number"}}
+                        <input type="number" id="field_{{.ID}}" name="field_{{.ID}}"
+                            {{if .Placeholder}}placeholder="{{.Placeholder}}"{{end}}
+                            {{if .IsRequired}}required{{end}}
+                            value="{{.Placeholder}}">
+                    
+                    {{else if eq .FieldType "email"}}
+                        <input type="email" id="field_{{.ID}}" name="field_{{.ID}}"
+                            {{if .Placeholder}}placeholder="{{.Placeholder}}"{{end}}
+                            {{if .IsRequired}}required{{end}}
+                            value="{{.Placeholder}}">
+                    
+                    {{else if eq .FieldType "select"}}
+                        <select id="field_{{.ID}}" name="field_{{.ID}}" {{if .IsRequired}}required{{end}}>
+                            <option value="">-- Select an option --</option>
+                            {{$savedValue := .Placeholder}}
+                            {{range $option := splitOptions .Options}}
+                                <option value="{{$option}}" {{if eq $option $savedValue}}selected{{end}}>{{$option}}</option>
+                            {{end}}
+                        </select>
+                    
+                    {{else if eq .FieldType "radio"}}
+                        <div class="radio-group">
+                            {{$fieldID := .ID}}
+                            {{$savedValue := .Placeholder}}
+                            {{range $option := splitOptions .Options}}
+                                <label class="radio-label">
+                                    <input type="radio" name="field_{{$fieldID}}" value="{{$option}}" 
+                                        {{if eq $option $savedValue}}checked{{end}}
+                                        {{if $.IsRequired}}required{{end}}>
+                                    {{$option}}
+                                </label>
+                            {{end}}
+                        </div>
+                    
+                    {{else if eq .FieldType "checkbox"}}
+                        <div class="checkbox-group">
+                            {{$fieldID := .ID}}
+                            {{$savedValues := splitValues .Placeholder}}
+                            {{range $option := splitOptions .Options}}
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="field_{{$fieldID}}" value="{{$option}}"
+                                        {{if contains $savedValues $option}}checked{{end}}>
+                                    {{$option}}
+                                </label>
+                            {{end}}
+                        </div>
+                    
+                    {{else if eq .FieldType "date"}}
+                        <input type="date" id="field_{{.ID}}" name="field_{{.ID}}"
+                            {{if .IsRequired}}required{{end}}
+                            value="{{.Placeholder}}">
+                    
+                    {{else}}
+                        <!-- Default to text input if type not recognized -->
+                        <input type="text" id="field_{{.ID}}" name="field_{{.ID}}"
+                            {{if .Placeholder}}placeholder="{{.Placeholder}}"{{end}}
+                            {{if .IsRequired}}required{{end}}
+                            value="{{.Placeholder}}">
+                    {{end}}
+                </div>
+            {{end}}
+        </div>
+        
+        <div class="form-navigation">
+            {{if .Form.IsMultiStep}}
+                {{if gt .Submission.CurrentStep 1}}
+                    <button type="submit" name="action" value="prev" class="button button-secondary">Previous</button>
+                {{end}}
+                
+                <button type="submit" name="action" value="next" class="button">Next</button>
+            {{else}}
+                <button type="submit" name="action" value="complete" class="button">Submit</button>
+            {{end}}
+        </div>
+        
+        <div class="form-save">
+            <p>
+                <small>Submission ID: {{.Submission.SubmissionKey}}</small>
+            </p>
+            <p>
+                <small>You can continue this submission later by visiting:<br>
+                <strong>/submissions/continue/{{.Submission.SubmissionKey}}</strong></small>
+            </p>
+        </div>
+    </form>
+</div>
+{{end}}

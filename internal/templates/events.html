@@ -1,0 +1,28 @@
+{{define "content"}}
+<div class="events-page">
+    <div class="actions">
+        <a href="/events/new" class="button">Create New Event</a>
+    </div>
+
+    {{if .Events}}
+        <div class="event-grid">
+            {{range .Events}}
+                <div class="event-card">
+                    <h3><a href="/events/view/{{.ID}}">{{.Name}}</a></h3>
+                    <p class="date">{{.Date.Format "January 2, 2006"}}</p>
+                    <p class="description">{{if .Description}}{{.Description}}{{else}}No description provided.{{end}}</p>
+                    <div class="card-actions">
+                        <a href="/events/view/{{.ID}}" class="button">View Details</a>
+                        <a href="/forms/new/{{.ID}}" class="button">Create Form</a>
+                    </div>
+                </div>
+            {{end}}
+        </div>
+    {{else}}
+        <div class="empty-state">
+            <p>No events have been created yet.</p>
+            <p><a href="/events/new" class="button">Create your first event</a></p>
+        </div>
+    {{end}}
+</div>
+{{end}}

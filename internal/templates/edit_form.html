@@ -1,0 +1,372 @@
+{{define "content"}}
+<div class="edit-form-page">
+    <div class="form-meta">
+        <div class="event-context">
+            <p>Event: <a href="/events/view/{{.Event.ID}}">{{.Event.Name}}</a></p>
+            <p>Status: {{if .Form.IsPublished}}<span class="status-published">Published</span>{{else}}<span class="status-draft">Draft</span>{{end}}</p>
+        </div>
+        
+        <form action="/forms/update" method="post" class="update-form-meta">
+            <input type="hidden" name="form_id" value="{{.Form.ID}}">
+            <input type="hidden" name="action" value="update_form">
+            
+            <div class="form-group">
+                <label for="title">Form Title</label>
+                <input type="text" id="title" name="title" value="{{.Form.Title}}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="is_multi_step">
+                    <input type="checkbox" id="is_multi_step" name="is_multi_step" {{if .Form.IsMultiStep}}checked{{end}}>
+                    Multi-step form
+                </label>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="button">Update Form Settings</button>
+            </div>
+        </form>
+        
+        <div class="publish-actions">
+            <form action="/forms/update" method="post">
+                <input type="hidden" name="form_id" value="{{.Form.ID}}">
+                <input type="hidden" name="action" value="publish">
+                
+                {{if .Form.IsPublished}}
+                    <input type="hidden" name="publish" value="0">
+                    <button type="submit" class="button button-warning">Unpublish Form</button>
+                {{else}}
+                    <input type="hidden" name="publish" value="1">
+                    <button type="submit" class="button button-success">Publish Form</button>
+                {{end}}
+                
+                {{if .Form.IsPublished}}
+                    <a href="/forms/view/{{.Form.ID}}" class="button" target="_blank">View Live Form</a>
+                {{end}}
+            </form>
+        </div>
+    </div>
+    
+    <div class="form-fields">
+        <h3>Form Fields</h3>
+        
+        {{if .Form.IsMultiStep}}
+            <div class="tabs">
+                {{$formID := .Form.ID}}
+                {{$steps := 0}}
+                {{range .Fields}}
+                    {{if gt .Step $steps}}
+                        {{$steps = .Step}}
+                    {{end}}
+                {{end}}
+                
+                {{range $i := seq 1 (add $steps 1)}}
+                    <button class="tab-button {{if eq $i 1}}active{{end}}" data-step="{{$i}}">Step {{$i}}</button>
+                {{end}}
+                <button class="tab-button" data-step="new">+ Add Step</button>
+            </div>
+        {{end}}
+        
+        <div class="fields-container">
+            {{if .Fields}}
+                {{if .Form.IsMultiStep}}
+                    {{range $step := seq 1 (add (maxStep .Fields) 1)}}
+                        <div class="step-fields {{if ne $step 1}}hidden{{end}}" data-step="{{$step}}">
+                            <h4>Step {{$step}} Fields</h4>
+                            <div class="fields-list">
+                                {{range $.Fields}}
+                                    {{if eq .Step $step}}
+                                        <div class="field-item">
+                                            <div class="field-header">
+                                                <span class="field-label">{{.Label}}</span>
+                                                <span class="field-type">{{.FieldType}}</span>
+                                                {{if .IsRequired}}<span class="required-badge">Required</span>{{end}}
+                                            </div>
+                                            <div class="field-actions">
+                                                <button class="edit-field" data-field-id="{{.ID}}">Edit</button>
+                                                <form action="/forms/update" method="post" class="inline-form">
+                                                    <input type="hidden" name="form_id" value="{{$formID}}">
+                                                    <input type="hidden" name="field_id" value="{{.ID}}">
+                                                    <input type="hidden" name="action" value="delete_field">
+                                                    <button type="submit" class="delete-field">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    {{end}}
+                                {{end}}
+                            </div>
+                            
+                            <div class="add-field-container">
+                                <button class="add-field-button" data-step="{{$step}}">+ Add Field to Step {{$step}}</button>
+                            </div>
+                        </div>
+                    {{end}}
+                {{else}}
+                    <div class="step-fields">
+                        <div class="fields-list">
+                            {{range .Fields}}
+                                <div class="field-item">
+                                    <div class="field-header">
+                                        <span class="field-label">{{.Label}}</span>
+                                        <span class="field-type">{{.FieldType}}</span>
+                                        {{if .IsRequired}}<span class="required-badge">Required</span>{{end}}
+                                    </div>
+                                    <div class="field-actions">
+                                        <button class="edit-field" data-field-id="{{.ID}}">Edit</button>
+                                        <form action="/forms/update" method="post" class="inline-form">
+                                            <input type="hidden" name="form_id" value="{{.Form.ID}}">
+                                            <input type="hidden" name="field_id" value="{{.ID}}">
+                                            <input type="hidden" name="action" value="delete_field">
+                                            <button type="submit" class="delete-field">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {{end}}
+                        </div>
+                        
+                        <div class="add-field-container">
+                            <button class="add-field-button" data-step="1">+ Add Field</button>
+                        </div>
+                    </div>
+                {{end}}
+            {{else}}
+                <div class="empty-state">
+                    <p>No fields have been added to this form yet.</p>
+                    <button class="add-field-button" data-step="1">+ Add Your First Field</button>
+                </div>
+            {{end}}
+        </div>
+    </div>
+    
+    <!-- Modal for adding/editing fields -->
+    <div id="field-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="modal-title">Add Field</h3>
+            
+            <form action="/forms/update" method="post" id="field-form">
+                <input type="hidden" name="form_id" value="{{.Form.ID}}">
+                <input type="hidden" name="action" value="add_field">
+                <input type="hidden" name="field_id" id="field_id" value="">
+                <input type="hidden" name="step" id="step" value="1">
+                
+                <div class="form-group">
+                    <label for="field_type">Field Type</label>
+                    <select id="field_type" name="field_type" required>
+                        <option value="text">Text</option>
+                        <option value="textarea">Text Area</option>
+                        <option value="number">Number</option>
+                        <option value="email">Email</option>
+                        <option value="select">Dropdown</option>
+                        <option value="radio">Radio Buttons</option>
+                        <option value="checkbox">Checkboxes</option>
+                        <option value="date">Date</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="label">Field Label</label>
+                    <input type="text" id="label" name="label" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="placeholder">Placeholder Text</label>
+                    <input type="text" id="placeholder" name="placeholder">
+                </div>
+                
+                <div class="form-group options-group hidden">
+                    <label for="options">Options</label>
+                    <textarea id="options" name="options" placeholder="Enter one option per line"></textarea>
+                    <p class="form-help">For dropdown, radio buttons, or checkboxes, enter one option per line.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="is_required">
+                        <input type="checkbox" id="is_required" name="is_required">
+                        Required Field
+                    </label>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="button button-secondary close-modal-button">Cancel</button>
+                    <button type="submit" class="button">Save Field</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show/hide options field based on field type
+    document.getElementById('field_type').addEventListener('change', function() {
+        const optionsGroup = document.querySelector('.options-group');
+        const fieldType = this.value;
+        
+        if (fieldType === 'select' || fieldType === 'radio' || fieldType === 'checkbox') {
+            optionsGroup.classList.remove('hidden');
+        } else {
+            optionsGroup.classList.add('hidden');
+        }
+    });
+    
+    // Tab navigation for multi-step forms
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const step = this.getAttribute('data-step');
+            
+            // Handle new step
+            if (step === 'new') {
+                const lastStep = document.querySelectorAll('.step-fields').length;
+                const newStep = lastStep + 1;
+                
+                // Create a new step UI
+                const stepContainer = document.createElement('div');
+                stepContainer.className = 'step-fields';
+                stepContainer.setAttribute('data-step', newStep);
+                stepContainer.innerHTML = `
+                    <h4>Step ${newStep} Fields</h4>
+                    <div class="fields-list"></div>
+                    <div class="add-field-container">
+                        <button class="add-field-button" data-step="${newStep}">+ Add Field to Step ${newStep}</button>
+                    </div>
+                `;
+                
+                document.querySelector('.fields-container').appendChild(stepContainer);
+                
+                // Create a new tab button
+                const tabsContainer = document.querySelector('.tabs');
+                const newButton = document.createElement('button');
+                newButton.className = 'tab-button';
+                newButton.setAttribute('data-step', newStep);
+                newButton.textContent = `Step ${newStep}`;
+                
+                // Insert before the "Add Step" button
+                tabsContainer.insertBefore(newButton, this);
+                
+                // Show the new step
+                document.querySelectorAll('.step-fields').forEach(el => el.classList.add('hidden'));
+                stepContainer.classList.remove('hidden');
+                
+                // Update active tab
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                newButton.classList.add('active');
+                
+                // Add event listener to new button
+                newButton.addEventListener('click', function() {
+                    const clickedStep = this.getAttribute('data-step');
+                    document.querySelectorAll('.step-fields').forEach(el => {
+                        if (el.getAttribute('data-step') === clickedStep) {
+                            el.classList.remove('hidden');
+                        } else {
+                            el.classList.add('hidden');
+                        }
+                    });
+                    
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+                
+                // Add event listeners to new add field button
+                stepContainer.querySelector('.add-field-button').addEventListener('click', function() {
+                    openAddFieldModal(this.getAttribute('data-step'));
+                });
+                
+                return;
+            }
+            
+            // Show the selected step
+            document.querySelectorAll('.step-fields').forEach(el => {
+                if (el.getAttribute('data-step') === step) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+            
+            // Update active tab
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // Open modal for adding fields
+    function openAddFieldModal(step) {
+        const modal = document.getElementById('field-modal');
+        const form = document.getElementById('field-form');
+        const modalTitle = document.getElementById('modal-title');
+        
+        // Reset form
+        form.reset();
+        document.getElementById('field_id').value = '';
+        document.getElementById('step').value = step;
+        form.setAttribute('action', '/forms/update');
+        form.elements['action'].value = 'add_field';
+        
+        // Update modal title
+        modalTitle.textContent = 'Add Field';
+        
+        // Show options field based on field type
+        const optionsGroup = document.querySelector('.options-group');
+        const fieldType = document.getElementById('field_type').value;
+        
+        if (fieldType === 'select' || fieldType === 'radio' || fieldType === 'checkbox') {
+            optionsGroup.classList.remove('hidden');
+        } else {
+            optionsGroup.classList.add('hidden');
+        }
+        
+        // Show modal
+        modal.classList.remove('hidden');
+    }
+    
+    // Open modal for editing fields
+    function openEditFieldModal(fieldId) {
+        // This would fetch the field data via AJAX in a real application
+        // For this example, we'll use a simple approach with data attributes
+        
+        const modal = document.getElementById('field-modal');
+        const form = document.getElementById('field-form');
+        const modalTitle = document.getElementById('modal-title');
+        
+        // Reset form
+        form.reset();
+        
+        // Set form action to update
+        form.setAttribute('action', '/forms/update');
+        form.elements['action'].value = 'update_field';
+        document.getElementById('field_id').value = fieldId;
+        
+        // Update modal title
+        modalTitle.textContent = 'Edit Field';
+        
+        // TODO: In a real application, fetch field data via AJAX
+        // For now, we'll leave fields empty
+        
+        // Show modal
+        modal.classList.remove('hidden');
+    }
+    
+    // Add event listeners for add field buttons
+    document.querySelectorAll('.add-field-button').forEach(button => {
+        button.addEventListener('click', function() {
+            openAddFieldModal(this.getAttribute('data-step'));
+        });
+    });
+    
+    // Add event listeners for edit field buttons
+    document.querySelectorAll('.edit-field').forEach(button => {
+        button.addEventListener('click', function() {
+            openEditFieldModal(this.getAttribute('data-field-id'));
+        });
+    });
+    
+    // Close modal
+    document.querySelector('.close-modal').addEventListener('click', function() {
+        document.getElementById('field-modal').classList.add('hidden');
+    });
+    
+    document.querySelector('.close-modal-button').addEventListener('click', function() {
+        document.getElementById('field-modal').classList.add('hidden');
+    });
+</script>
+{{end}}

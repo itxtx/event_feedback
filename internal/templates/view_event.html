@@ -1,0 +1,36 @@
+{{define "content"}}
+<div class="view-event-page">
+    <div class="event-details">
+        <p class="date">{{.Event.Date.Format "January 2, 2006"}}</p>
+        <p class="description">{{if .Event.Description}}{{.Event.Description}}{{else}}No description provided.{{end}}</p>
+    </div>
+    
+    <div class="actions">
+        <a href="/forms/new/{{.Event.ID}}" class="button">Create New Form</a>
+    </div>
+    
+    <h3>Forms for this Event</h3>
+    {{if .Forms}}
+        <div class="forms-list">
+            {{range .Forms}}
+                <div class="form-card">
+                    <h4>{{.Title}}</h4>
+                    <p class="status">Status: {{if .IsPublished}}Published{{else}}Draft{{end}}</p>
+                    <p class="type">{{if .IsMultiStep}}Multi-step form{{else}}Single page form{{end}}</p>
+                    <div class="card-actions">
+                        <a href="/forms/edit/{{.ID}}" class="button">Edit Form</a>
+                        {{if .IsPublished}}
+                            <a href="/forms/view/{{.ID}}" class="button">View Form</a>
+                        {{end}}
+                    </div>
+                </div>
+            {{end}}
+        </div>
+    {{else}}
+        <div class="empty-state">
+            <p>No forms have been created for this event yet.</p>
+            <p><a href="/forms/new/{{.Event.ID}}" class="button">Create your first form</a></p>
+        </div>
+    {{end}}
+</div>
+{{end}}

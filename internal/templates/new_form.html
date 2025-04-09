@@ -1,0 +1,35 @@
+{{define "content"}}
+<div class="new-form-page">
+    <div class="event-context">
+        <h3>Creating Form for: {{.Event.Name}}</h3>
+        <p class="date">Event Date: {{.Event.Date.Format "January 2, 2006"}}</p>
+    </div>
+
+    <form action="/forms/create" method="post" class="form-creation">
+        <input type="hidden" name="event_id" value="{{.Event.ID}}">
+        
+        <div class="form-group">
+            <label for="title">Form Title *</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="is_multi_step">
+                <input type="checkbox" id="is_multi_step" name="is_multi_step">
+                Create as multi-step form
+            </label>
+            <p class="form-help">Multi-step forms split questions across multiple pages for a better user experience.</p>
+        </div>
+        
+        <div class="form-actions">
+            <a href="/events/view/{{.Event.ID}}" class="button button-secondary">Cancel</a>
+            <button type="submit" class="button">Create Form</button>
+        </div>
+    </form>
+    
+    <div class="info-box">
+        <h4>What happens next?</h4>
+        <p>After creating the form, you'll be able to add fields and questions.</p>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,73 @@
+{{define "content"}}
+<div class="view-submission-page">
+    <div class="submission-meta">
+        <div class="form-event-info">
+            <h3>{{.Form.Title}}</h3>
+            <p>Event: <a href="/events/view/{{.Event.ID}}">{{.Event.Name}}</a></p>
+            <p>Submission ID: <span class="submission-key">{{.Submission.SubmissionKey}}</span></p>
+            <p>Status: <span class="status-badge {{.Submission.Status}}">{{.Submission.Status}}</span></p>
+            
+            {{if .Submission.CompletedAt.Valid}}
+                <p>Completed at: {{.Submission.CompletedAt.Time.Format "January 2, 2006 at 3:04 PM"}}</p>
+            {{end}}
+        </div>
+    </div>
+    
+    <div class="submission-content">
+        <h3>Responses</h3>
+        
+        {{if .Responses}}
+            {{if .Form.IsMultiStep}}
+                {{$currentStep := 0}}
+                {{range .Responses}}
+                    {{if ne .Step $currentStep}}
+                        {{if ne $currentStep 0}}
+                            </div>
+                        {{end}}
+                        {{$currentStep = .Step}}
+                        <div class="response-step">
+                            <h4>Step {{.Step}}</h4>
+                    {{end}}
+                    
+                    <div class="response-item">
+                        <div class="response-label">{{.Label}}</div>
+                        <div class="response-value">
+                            {{if eq .FieldType "textarea"}}
+                                <pre>{{.Value}}</pre>
+                            {{else}}
+                                {{.Value}}
+                            {{end}}
+                        </div>
+                    </div>
+                {{end}}
+                </div>
+            {{else}}
+                <div class="response-list">
+                    {{range .Responses}}
+                        <div class="response-item">
+                            <div class="response-label">{{.Label}}</div>
+                            <div class="response-value">
+                                {{if eq .FieldType "textarea"}}
+                                    <pre>{{.Value}}</pre>
+                                {{else}}
+                                    {{.Value}}
+                                {{end}}
+                            </div>
+                        </div>
+                    {{end}}
+                </div>
+            {{end}}
+        {{else}}
+            <p>No responses found for this submission.</p>
+        {{end}}
+    </div>
+    
+    <div class="submission-actions">
+        {{if eq .Submission.Status "in_progress"}}
+            <a href="/submissions/continue/{{.Submission.SubmissionKey}}" class="button">Continue Submission</a>
+        {{end}}
+        <a href="/forms/view/{{.Form.ID}}" class="button button-secondary">Start New Submission</a>
+        <a href="/" class="button button-secondary">Back to Home</a>
+    </div>
+</div>
+{{end}}
